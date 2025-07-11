@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ProductDashboard from './ProductDashboard';
 import ProductTracker from './ProductTracker';
 import ProductModal from './ProductModal';
+import GoogleSheetsSettings from './components/GoogleSheetsSettings';
+import googleSheetsService from './services/googleSheetsService';
 
 interface Product {
     id: string;
@@ -57,6 +59,7 @@ export default function App() {
     const [productsData, setProductsData] = useState<Record<string, ProductData>>({});
     const [showProductModal, setShowProductModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [showGoogleSheetsSettings, setShowGoogleSheetsSettings] = useState(false);
 
     // Load data from localStorage on component mount
     useEffect(() => {
@@ -172,13 +175,68 @@ export default function App() {
     };
 
     const updateProductData = (productId: string, updates: Partial<Pick<ProductData, 'transactions' | 'expenses'>>) => {
-        setProductsData(prev => ({
-            ...prev,
-            [productId]: {
-                ...prev[productId],
-                ...updates
-            }
-        }));
+        setProductsData(prev => {
+            const newData = {
+                ...prev,
+                [productId]: {
+                    ...prev[productId],
+                    ...updates
+                }
+            };
+            
+            // Sync to Google Sheets when data changes
+            syncToGoogleSheets(newData);
+            
+            return newData;
+        });
+    };
+
+    // Helper function to convert internal data to Google Sheets format
+    const convertToGoogleSheetsFormat = (allProductsData: Record<string, ProductData>) => {
+        const allEntries: Array<Transaction & { productId: string; productName: string } | Expense & { productId: string; productName: string }> = [];
+        
+        Object.values(allProductsData).forEach(productData => {
+            const { product, transactions, expenses } = productData;
+            
+            // Add transactions with product info
+            transactions.forEach(tx => {
+                allEntries.push({
+                    ...tx,
+                    productId: product.id,
+                    productName: product.name
+                });
+            });
+            
+            // Add expenses with product info
+            expenses.forEach(ex => {
+                allEntries.push({
+                    ...ex,
+                    productId: product.id,
+                    productName: product.name
+                });
+            });
+        });
+        
+        // Sort by date (most recent first)
+        return allEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    };
+
+    // Sync data to Google Sheets
+    const syncToGoogleSheets = async (data?: Record<string, ProductData>) => {
+        const dataToSync = data || productsData;
+        const allEntries = convertToGoogleSheetsFormat(dataToSync);
+        
+        try {
+            await googleSheetsService.syncAllData(allEntries);
+        } catch (error) {
+            console.error('Failed to sync to Google Sheets:', error);
+        }
+    };
+
+    // Handle Google Sheets sync for all existing data
+    const handleSyncAllData = async () => {
+        const allEntries = convertToGoogleSheetsFormat(productsData);
+        await googleSheetsService.syncAllData(allEntries);
     };
 
     const currentProduct = selectedProductId ? productsData[selectedProductId]?.product : null;
@@ -215,6 +273,13 @@ export default function App() {
                     }
                 />
             )}
+
+            {showGoogleSheetsSettings && (
+                <GoogleSheetsSettings
+                    onClose={() => setShowGoogleSheetsSettings(false)}
+                    onSyncData={handleSyncAllData}
+                />
+            )}
             
             <ProductDashboard
                 products={getProductsWithStats()}
@@ -222,6 +287,7 @@ export default function App() {
                 onCreateProduct={() => setShowProductModal(true)}
                 onEditProduct={handleEditProduct}
                 onDeleteProduct={handleDeleteProduct}
+                onGoogleSheetsSettings={() => setShowGoogleSheetsSettings(true)}
             />
         </>
     );

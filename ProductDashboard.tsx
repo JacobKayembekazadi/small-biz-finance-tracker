@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, DollarSign, Package, TrendingUp, ArrowRight, Pencil, Trash2, ShoppingCart } from 'lucide-react';
+import { Plus, DollarSign, Package, TrendingUp, ArrowRight, Pencil, Trash2, ShoppingCart, FileSpreadsheet } from 'lucide-react';
 
 interface Product {
     id: string;
@@ -30,6 +30,7 @@ interface ProductDashboardProps {
     onCreateProduct: () => void;
     onEditProduct: (product: Product) => void;
     onDeleteProduct: (productId: string) => void;
+    onGoogleSheetsSettings: () => void;
 }
 
 const ProductCard: React.FC<{ 
@@ -123,7 +124,7 @@ const CreateProductCard: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     </div>
 );
 
-export default function ProductDashboard({ products, onSelectProduct, onCreateProduct, onEditProduct, onDeleteProduct }: ProductDashboardProps) {
+export default function ProductDashboard({ products, onSelectProduct, onCreateProduct, onEditProduct, onDeleteProduct, onGoogleSheetsSettings }: ProductDashboardProps) {
     const totalRevenue = products.reduce((sum, product) => sum + product.stats.totalRevenue, 0);
     const totalProfit = products.reduce((sum, product) => sum + product.stats.netProfit, 0);
     const totalProducts = products.length;
@@ -131,9 +132,19 @@ export default function ProductDashboard({ products, onSelectProduct, onCreatePr
     return (
         <div className="bg-gray-100 min-h-screen font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <header className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Business Dashboard</h1>
-                    <p className="text-lg text-gray-500">Manage and track all your products</p>
+                <header className="mb-8 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-4xl font-bold text-gray-800 mb-2">Business Dashboard</h1>
+                        <p className="text-lg text-gray-500">Manage and track all your products</p>
+                    </div>
+                    <button
+                        onClick={onGoogleSheetsSettings}
+                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        title="Google Sheets Integration"
+                    >
+                        <FileSpreadsheet size={20} />
+                        <span>Google Sheets</span>
+                    </button>
                 </header>
 
                 {/* Overview Stats */}

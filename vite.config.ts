@@ -6,7 +6,9 @@ export default defineConfig(({ mode }) => {
     return {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GOOGLE_SHEETS_API_KEY': JSON.stringify(env.GOOGLE_SHEETS_API_KEY),
+        'process.env.GOOGLE_SHEETS_SPREADSHEET_ID': JSON.stringify(env.GOOGLE_SHEETS_SPREADSHEET_ID)
       },
       resolve: {
         alias: {
