@@ -1,0 +1,6 @@
+{
+  "name": "Small Business Financial Tracker",
+  "description": "A dashboard to track sales, expenses, inventory, and profitability for a small business, such as selling watches. It provides a visual overview of financial health with charts and key performance indicators.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
