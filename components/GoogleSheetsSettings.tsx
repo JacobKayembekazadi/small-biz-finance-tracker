@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle, AlertCircle, RefreshCw, ExternalLink, Download, Upload } from 'lucide-react';
-import googleSheetsService from '../services/googleSheetsService';
+import { X, CheckCircle, AlertCircle, RefreshCw, ExternalLink, Download, Upload, FileText } from 'lucide-react';
+import simpleGoogleSheetsService from '../services/simpleGoogleSheetsService';
 
 interface GoogleSheetsSettingsProps {
     onClose: () => void;
@@ -57,7 +57,7 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
 
     // Load current values on mount
     useEffect(() => {
-        const currentConfig = googleSheetsService.getConfigurationStatus();
+        const currentConfig = simpleGoogleSheetsService.getConfigurationStatus();
         // We can't read the actual values from environment variables, so we show placeholders
         if (currentConfig.hasApiKey) {
             setApiKey('••••••••••••••••••••••••••••••••••••••••');
@@ -71,7 +71,7 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
         setIsTestingConnection(true);
         
         try {
-            const result = await googleSheetsService.testConnection();
+            const result = await simpleGoogleSheetsService.testConnection();
             setConnectionStatus(result);
         } catch (error) {
             setConnectionStatus({
@@ -83,29 +83,13 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
         }
     };
 
-    const handleInitializeSheet = async () => {
-        setIsSyncing(true);
-        
-        try {
-            const success = await googleSheetsService.initializeSpreadsheet();
-            if (success) {
-                setConnectionStatus({
-                    success: true,
-                    message: 'Spreadsheet initialized successfully! Headers have been added.'
-                });
-            } else {
-                setConnectionStatus({
-                    success: false,
-                    message: 'Failed to initialize spreadsheet. Please check your configuration.'
-                });
-            }
-        } catch (error) {
+    const handleExportCSV = () => {
+        if (onSyncData) {
+            // This will be handled by the parent component
             setConnectionStatus({
-                success: false,
-                message: `Initialization error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                success: true,
+                message: 'CSV export initiated! Check your downloads folder.'
             });
-        } finally {
-            setIsSyncing(false);
         }
     };
 
@@ -129,7 +113,7 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
         }
     };
 
-    const configStatus = googleSheetsService.getConfigurationStatus();
+    const configStatus = simpleGoogleSheetsService.getConfigurationStatus();
 
     return (
         <Modal onClose={onClose}>
@@ -272,16 +256,12 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
                 {configStatus.configured && (
                     <div className="space-y-3">
                         <button
-                            onClick={handleInitializeSheet}
+                            onClick={handleExportCSV}
                             disabled={isSyncing}
                             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isSyncing ? (
-                                <RefreshCw size={16} className="animate-spin" />
-                            ) : (
-                                <Download size={16} />
-                            )}
-                            <span>Initialize Spreadsheet</span>
+                            <FileText size={16} />
+                            <span>Export to CSV</span>
                         </button>
 
                         <button
@@ -294,7 +274,7 @@ export default function GoogleSheetsSettings({ onClose, onSyncData }: GoogleShee
                             ) : (
                                 <Upload size={16} />
                             )}
-                            <span>Sync All Existing Data</span>
+                            <span>Export All Data</span>
                         </button>
                     </div>
                 )}

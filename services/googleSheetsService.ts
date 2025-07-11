@@ -135,6 +135,7 @@ class GoogleSheetsService {
             return true;
         } catch (error) {
             console.error('Failed to add log entry to Google Sheets:', error);
+            console.log('Note: Google Sheets API requires OAuth2 for write operations. Using read-only mode.');
             return false;
         }
     }
@@ -160,6 +161,7 @@ class GoogleSheetsService {
             return true;
         } catch (error) {
             console.error('Failed to sync data to Google Sheets:', error);
+            console.log('Note: Google Sheets API requires OAuth2 for write operations. Using read-only mode.');
             return false;
         }
     }

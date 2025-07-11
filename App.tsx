@@ -3,7 +3,7 @@ import ProductDashboard from './ProductDashboard';
 import ProductTracker from './ProductTracker';
 import ProductModal from './ProductModal';
 import GoogleSheetsSettings from './components/GoogleSheetsSettings';
-import googleSheetsService from './services/googleSheetsService';
+import simpleGoogleSheetsService from './services/simpleGoogleSheetsService';
 
 interface Product {
     id: string;
@@ -184,8 +184,8 @@ export default function App() {
                 }
             };
             
-            // Sync to Google Sheets when data changes
-            syncToGoogleSheets(newData);
+            // Export to CSV when data changes (optional)
+            // exportToCSV(newData);
             
             return newData;
         });
@@ -221,22 +221,22 @@ export default function App() {
         return allEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     };
 
-    // Sync data to Google Sheets
-    const syncToGoogleSheets = async (data?: Record<string, ProductData>) => {
-        const dataToSync = data || productsData;
-        const allEntries = convertToGoogleSheetsFormat(dataToSync);
+    // Export data to CSV
+    const exportToCSV = (data?: Record<string, ProductData>) => {
+        const dataToExport = data || productsData;
+        const allEntries = convertToGoogleSheetsFormat(dataToExport);
         
         try {
-            await googleSheetsService.syncAllData(allEntries);
+            simpleGoogleSheetsService.downloadCSV(allEntries, 'finance-data.csv');
         } catch (error) {
-            console.error('Failed to sync to Google Sheets:', error);
+            console.error('Failed to export CSV:', error);
         }
     };
 
-    // Handle Google Sheets sync for all existing data
-    const handleSyncAllData = async () => {
+    // Handle CSV export for all existing data
+    const handleExportAllData = async () => {
         const allEntries = convertToGoogleSheetsFormat(productsData);
-        await googleSheetsService.syncAllData(allEntries);
+        simpleGoogleSheetsService.downloadCSV(allEntries, 'finance-data.csv');
     };
 
     const currentProduct = selectedProductId ? productsData[selectedProductId]?.product : null;
@@ -277,7 +277,7 @@ export default function App() {
             {showGoogleSheetsSettings && (
                 <GoogleSheetsSettings
                     onClose={() => setShowGoogleSheetsSettings(false)}
-                    onSyncData={handleSyncAllData}
+                    onSyncData={handleExportAllData}
                 />
             )}
             
